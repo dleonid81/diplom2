@@ -25,10 +25,13 @@ class Interface:
         self.count = 10
         self.offset = 0
         self.keyboard = VkKeyboard(one_time=True)
+        self.sex = None
 
     def fetch_profiles(self):
-        print(self.params)
-        profiles = self.vk_tools.search_users(self.params, self.offset, self.count)
+        if self.sex:
+            profiles = self.vk_tools.search_users(self.params, self.offset, self.count, self.sex)
+        else:
+            profiles = self.vk_tools.search_users(self.params, self.offset, self.count, None)
         self.offset += self.count
         return profiles
 
@@ -43,14 +46,12 @@ class Interface:
         profiles = []
         if not profiles:
             profiles = self.fetch_profiles()
-            print(f'в наличии: {profiles}')
 
         not_found_profiles = []
 
         while not not_found_profiles:
             for profile in profiles:
                 if check_user_in_db(engine, self.params['id'], profile['id']):
-                    print(f"пользователь был посмотрен {profile['id']}")
                     continue
                 else:
                     not_found_profiles.append(profile)
@@ -93,6 +94,7 @@ class Interface:
                 if param == 'sex':
                     self.message_send(user_id, 'Давайте уточним ваш пол? Ответьте "да" или "нет".')
                     self.user_response(user_id, 'sex')
+                    self.fetch_profiles()
                 elif param == 'bdate':
                     self.message_send(user_id, 'Давайте изменим дату рождения? Ответьте "да" или "нет".')
                     self.user_response(user_id, 'bdate')
@@ -162,8 +164,7 @@ class Interface:
                         self.message_send(user_id, 'Отменено изменение параметров поиска.')
                         return
                     elif new_value in ['1', '2']:
-                        self.params['sex'] = new_value
-                        print(new_value)
+                        self.sex = new_value
                         self.message_send(user_id, f"Параметр пола успешно изменен на: {new_value}")
                         return
                     else:
@@ -205,7 +206,7 @@ class Interface:
                     self.params = self.vk_tools.get_profile_info(event.user_id)
                     self.change_search_params(event.user_id)
                     self.message_send(event.user_id, f'Здравствуй {self.params["name"]}\n'
-                                                     f'Нажмите "поиск" или "Инструкция"', self.keyboard)
+                                                     f'Нажмите "поиск" или "инструкция"', self.keyboard)
                 elif command == 'поиск':
                     if not self.params:
                         self.params = self.vk_tools.get_profile_info(event.user_id)
@@ -220,9 +221,6 @@ class Interface:
                 elif command == 'др':
                     self.message_send(event.user_id, 'Хотите сменить дату рождения? да/нет')
                     self.user_response(event.user_id, 'bdate')
-                elif command == 'пол':
-                    self.message_send(event.user_id, 'Хотите указать ваш пол? да/нет')
-                    self.user_response(event.user_id, 'sex')
                 else:
                     self.message_send(event.user_id, 'Неизвестная команда')
 
