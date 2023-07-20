@@ -39,8 +39,8 @@ class VkTools:
         }
         return param
 
-    def search_users(self, params, offset, count):
-        sex = params['sex']
+    def search_users(self, params, offset, count, new_sex):
+        sex = params.get('sex') or new_sex
         if sex == 1:
             sex = 2
         else:
@@ -49,8 +49,8 @@ class VkTools:
         curent_year = datetime.now().year
         user_year = int(params['bdate'].split('.')[2])
         age = curent_year - user_year
-        age_from = age - 3
-        age_to = age + 3
+        age_from = age - 1
+        age_to = age + 1
         offset = offset
 
         try:
